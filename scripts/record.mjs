@@ -52,7 +52,7 @@ try {
   await page.waitForFunction(
     (prev) => document.querySelector('[data-testid="incident-row"]')?.dataset.id !== prev,
     report.ackedIncident,
-    { timeout: 600000 },
+    { timeout: 240000 },
   );
   report.at.newIncident = mmss();
   report.newIncident = await page.locator('[data-testid="incident-row"]').first().getAttribute('data-id');
