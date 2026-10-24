@@ -1,17 +1,20 @@
 import { fetchIncidents, ack } from './api.js';
 
+const board = document.querySelector('[data-testid="board"]');
 const list = document.querySelector('[data-testid="incident-list"]');
 const loader = document.querySelector('[data-testid="loader"]');
 const empty = document.querySelector('[data-testid="empty"]');
 
-const byId = new Map(); // incident id -> incident
+const byId = new Map(); // what the board shows, as it was first seen
+const pending = new Map(); // landed while on screen; the "N new" bar brings them in
 const acked = new Set(); // incident ids this viewer has acked
 let loaded = false;
+let bar = null;
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-// The viewer's zone, in the viewer's order (dd/mm for EU locales). The <time> keeps the full UTC value.
+// The viewer's zone, in the viewer's order (dd/mm for EU locales). <time> keeps the full UTC value.
 const timeText = (iso) => new Date(iso).toLocaleString();
 
 function rowHtml(i) {
@@ -27,10 +30,35 @@ function rowHtml(i) {
   </li>`;
 }
 
+// The list holds still while it is on screen; a landing waits behind the bar until the on-call shows it.
 function render() {
   const incidents = [...byId.values()].sort((a, b) => b.openedAt.localeCompare(a.openedAt));
   list.innerHTML = incidents.map(rowHtml).join('');
   empty.hidden = !(loaded && incidents.length === 0);
+  renderBar();
+}
+
+function renderBar() {
+  if (pending.size === 0) {
+    bar?.remove();
+    bar = null;
+    return;
+  }
+  if (!bar) {
+    bar = document.createElement('button');
+    bar.type = 'button';
+    bar.dataset.testid = 'new-bar';
+    bar.className = 'new-bar';
+    bar.addEventListener('click', showNew);
+    board.insertBefore(bar, list);
+  }
+  bar.textContent = `${pending.size} new - show`;
+}
+
+function showNew() {
+  for (const [id, incident] of pending) byId.set(id, incident);
+  pending.clear();
+  render();
 }
 
 async function tick() {
@@ -44,8 +72,10 @@ async function tick() {
   if (!loaded) {
     loaded = true;
     loader.remove();
+    for (const i of page.incidents) byId.set(i.id, i);
+  } else {
+    for (const i of page.incidents) if (!byId.has(i.id) && !pending.has(i.id)) pending.set(i.id, i);
   }
-  for (const i of page.incidents) byId.set(i.id, i);
   render();
 }
 
