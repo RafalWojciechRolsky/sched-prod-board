@@ -8,7 +8,14 @@ export async function fetchIncidents() {
   const url = new URL(`${API}/incidents`);
   url.searchParams.set('t', SESSION);
   if (cursor) url.searchParams.set('since', cursor);
-  const res = await fetch(url);
+  let res = await fetch(url);
+  if (!res.ok && cursor) {
+    // The course re-dealt the night: our cursor is from an older state.
+    // Start over without since, the way the API's refusal asks for.
+    cursor = null;
+    url.searchParams.delete('since');
+    res = await fetch(url);
+  }
   if (!res.ok) throw new Error(`incidents: ${res.status} ${await res.text()}`);
   const page = await res.json();
   cursor = page.cursor;
