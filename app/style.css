@@ -14,5 +14,6 @@ footer { color: #777; font-size: 13px; }
 .ack:hover { background: #f0f0f0; }
 .ack:disabled { opacity: 0.5; cursor: default; }
 .acked { color: #0a7a33; font-weight: 600; }
-.new-bar { display: block; box-sizing: border-box; width: 100%; max-width: 960px; margin: 8px 0 2px; padding: 8px 12px; font: inherit; border: 1px solid #bbb; border-radius: 6px; background: #fff; cursor: pointer; text-align: center; }
+.mark { justify-self: end; }
+.new-bar { display: block; box-sizing: border-box; width: 100%; max-width: 960px; height: 38px; margin: 8px 0 2px; padding: 8px 12px; font: inherit; border: 1px solid #bbb; border-radius: 6px; background: #fff; cursor: pointer; text-align: center; }
 .new-bar:hover { background: #f0f0f0; }
